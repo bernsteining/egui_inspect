@@ -9,9 +9,7 @@ use crate::AttributeArgs;
 pub fn get_path_str(type_path: &Type) -> Option<String> {
     match type_path {
         Path(type_path) => {
-            let ident = type_path
-                .path
-                .get_ident();
+            let ident = type_path.path.get_ident();
             if let Some(name) = ident {
                 return Some(name.to_string());
             }
@@ -22,7 +20,11 @@ pub fn get_path_str(type_path: &Type) -> Option<String> {
     }
 }
 
-pub(crate) fn get_default_function_call(field: &Field, mutable: bool, attrs: &AttributeArgs) -> TokenStream {
+pub(crate) fn get_default_function_call(
+    field: &Field,
+    mutable: bool,
+    attrs: &AttributeArgs,
+) -> TokenStream {
     let name = &field.ident;
 
     let name_str = match &attrs.name {

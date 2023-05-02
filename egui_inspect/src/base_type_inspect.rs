@@ -1,7 +1,10 @@
-use std::ops::Add;
 use crate::InspectNumber;
 use crate::InspectString;
 use egui::{Color32, Ui};
+use std::fmt::Display;
+use std::ops::Add;
+use strum::EnumIter;
+use strum::IntoEnumIterator;
 
 macro_rules! impl_inspect_float {
     ($($t:ty),+) => {
@@ -130,37 +133,89 @@ impl crate::EguiInspect for bool {
     }
 }
 
+macro_rules! impl_inspect_enum {
+    ($name: ident { $( $variant: ident ),* $(,)? }) => {
+        impl<$name: PartialEq + Display + Copy + IntoEnumIterator> crate::InspectEnum for $name {
+            fn inspect(&self, label: &str, ui: &mut egui::Ui) {
+                egui::ComboBox::from_label(label)
+                    .selected_text(format!("{self}"))
+                    .show_ui(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.vertical(|ui| {
+                                for variant in $name::iter() {
+                                    ui.label(format!("{variant}"));
+                                }
+                            });
+                        });
+                    });
+            }
+
+            fn inspect_mut(&mut self, label: &str, ui: &mut egui::Ui) {
+                egui::ComboBox::from_label(label)
+                    .selected_text(format!("{self}"))
+                    .show_ui(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.vertical(|ui| {
+                                for variant in $name::iter() {
+                                    ui.selectable_value(self, variant, format!("{variant}"));
+                                }
+                            });
+                        });
+                    });
+            }
+        }
+    };
+}
+
+enum Enum {
+    A,
+    B,
+    C,
+}
+
+impl_inspect_enum!(Enum { A, B, C });
+
 impl<T: crate::EguiInspect, const N: usize> crate::EguiInspect for [T; N] {
     fn inspect(&self, label: &str, ui: &mut Ui) {
-        egui::CollapsingHeader::new(label.to_string().add(format!("[{}]", N).as_str())).show(ui, |ui| {
-            for item in self.iter() {
-                item.inspect("item", ui);
-            }
-        });
+        egui::CollapsingHeader::new(label.to_string().add(format!("[{}]", N).as_str())).show(
+            ui,
+            |ui| {
+                for item in self.iter() {
+                    item.inspect("item", ui);
+                }
+            },
+        );
     }
 
     fn inspect_mut(&mut self, label: &str, ui: &mut Ui) {
-        egui::CollapsingHeader::new(label.to_string().add(format!("[{}]", N).as_str())).show(ui, |ui| {
-            for item in self.iter_mut() {
-                item.inspect_mut("item", ui);
-            }
-        });
+        egui::CollapsingHeader::new(label.to_string().add(format!("[{}]", N).as_str())).show(
+            ui,
+            |ui| {
+                for item in self.iter_mut() {
+                    item.inspect_mut("item", ui);
+                }
+            },
+        );
     }
 }
 
 impl<T: crate::EguiInspect + Default> crate::EguiInspect for Vec<T> {
     fn inspect(&self, label: &str, ui: &mut Ui) {
-        egui::CollapsingHeader::new(label.to_string().add(format!("[{}]", self.len()).as_str())).show(ui, |ui| {
-            for item in self.iter() {
-                item.inspect("item", ui);
-            }
-        });
+        egui::CollapsingHeader::new(label.to_string().add(format!("[{}]", self.len()).as_str()))
+            .show(ui, |ui| {
+                for item in self.iter() {
+                    item.inspect("item", ui);
+                }
+            });
     }
 
     fn inspect_mut(&mut self, label: &str, ui: &mut Ui) {
         ui.horizontal_top(|ui| {
-            egui::CollapsingHeader::new(label.to_string().add(format!("[{}]", self.len()).as_str()))
-                .id_source(label).show(ui, |ui| {
+            egui::CollapsingHeader::new(
+                label.to_string().add(format!("[{}]", self.len()).as_str()),
+            )
+            .id_source(label)
+            .show(ui, |ui| {
                 for item in self.iter_mut() {
                     item.inspect_mut("item", ui);
                 }

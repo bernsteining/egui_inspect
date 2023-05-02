@@ -72,4 +72,9 @@ pub trait InspectString {
     fn inspect_mut_singleline(&mut self, label: &str, ui: &mut egui::Ui);
 }
 
+pub trait InspectEnum {
+    fn inspect(&self, label: &str, ui: &mut egui::Ui);
+    fn inspect_mut(&mut self, label: &str, ui: &mut egui::Ui);
+}
+
 pub mod base_type_inspect;

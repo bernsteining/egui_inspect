@@ -1,6 +1,8 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
+use syn::punctuated::Pair::Punctuated;
+
 use syn::{
     parse_macro_input, parse_quote, Data, DeriveInput, Field, Fields, FieldsNamed, GenericParam,
     Generics, Index,
@@ -94,12 +96,12 @@ fn inspect_struct(data: &Data, _struct_name: &Ident, mutable: bool) -> TokenStre
             Fields::Named(ref fields) => handle_named_fields(fields, mutable),
             Fields::Unnamed(ref fields) => {
                 let mut recurse = Vec::new();
-                for (i,_) in fields.unnamed.iter().enumerate() {
+                for (i, _) in fields.unnamed.iter().enumerate() {
                     let tuple_index = Index::from(i);
                     let name = format!("Field {i}");
                     let ref_str = if mutable { quote!(&mut) } else { quote!(&) };
                     recurse.push(quote! { egui_inspect::EguiInspect::inspect(#ref_str self.#tuple_index, #name, ui);});
-                };
+                }
 
                 let result = quote! {
                     ui.strong(label);
@@ -107,9 +109,15 @@ fn inspect_struct(data: &Data, _struct_name: &Ident, mutable: bool) -> TokenStre
                 };
                 result
             }
-            _ => unimplemented!("Unit cannot be inspected !")
+            _ => unimplemented!("Unit cannot be inspected !"),
         },
-        Data::Enum(_) | Data::Union(_) => unimplemented!("Enums and Unions are not yet supported"),
+        Data::Enum(ref enum_data) =>
+        {
+                    let ref_str = if mutable { quote!(&mut) } else { quote!(&) };
+                    // let inner = enum_data.variants.inner; private field
+                    quote! { egui_inspect::EguiInspect::inspect(#ref_str self, "test", ui);}
+        },
+        Data::Union(_) => unimplemented!("Unions are not yet supported"),
     }
 }
 
