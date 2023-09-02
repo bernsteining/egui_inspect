@@ -115,6 +115,7 @@ fn inspect_struct(data: &Data, _struct_name: &Ident, mutable: bool) -> TokenStre
         {
                     let ref_str = if mutable { quote!(&mut) } else { quote!(&) };
                     // let inner = enum_data.variants.inner; private field
+                    // todo check this out https://github.com/crumblingstatue/egui-inspect/blob/main/egui-inspect-derive/src/lib.rs#L74
                     quote! { egui_inspect::EguiInspect::inspect(#ref_str self, "test", ui);}
         },
         Data::Union(_) => unimplemented!("Unions are not yet supported"),
